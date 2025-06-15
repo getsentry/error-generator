@@ -1,3 +1,5 @@
+export const dynamic = 'force-static';
+
 import React from 'react';
 import { Box, Container, Heading, Text, VStack, Link } from '@chakra-ui/react';
 import ErrorGenerator from './ErrorGenerator';
