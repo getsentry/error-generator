@@ -26,6 +26,7 @@
     "@chakra-ui/react": "^2.10.7",
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
+    "@fontsource/rubik": "^5.2.6",
     "@sentry/browser": "^8.30.0",
     "@sentry/nextjs": "^9.17.0",
     "@sentry/types": "^8.30.0",
