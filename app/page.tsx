@@ -24,7 +24,7 @@ const SentryPage = () => {
                 <Text fontSize="sm" color="gray.500">
                     Commit{' '}
                     <Link
-                        href={`https://github.com/iamrajjoshi/errors/commit/${process.env.COMMIT_HASH}`}
+                        href={`https://github.com/getsentry/error-generator/commit/${process.env.COMMIT_HASH}`}
                         isExternal
                         color="gray.300"
                         _hover={{ color: 'gray.200', textDecoration: 'underline' }}
