@@ -248,12 +248,22 @@ const ErrorGenerator = () => {
                             placeholder="Tag key"
                             value={newTagKey}
                             onChange={(e) => setNewTagKey(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    addTag();
+                                }
+                            }}
                             flex={1}
                         />
                         <Input
                             placeholder="Tag value"
                             value={newTagValue}
                             onChange={(e) => setNewTagValue(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    addTag();
+                                }
+                            }}
                             flex={1}
                         />
                         <IconButton
