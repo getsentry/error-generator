@@ -101,14 +101,14 @@ export async function POST(request: NextRequest) {
                     platform: 'javascript',
                     level: getSentryLevel(priority),
                     logger: 'edge-function',
-                    transaction: `test-transaction-${errorIndex}-${eventIndex}`,
+                    transaction: `test-transaction-${errorIndex}-${eventId}`,
                     server_name: 'vercel-edge-function',
                     fingerprint: errorFingerprint,
                     message: `Error generated with event_id: ${eventId} (Priority: ${priority})`,
                     user: {
-                        id: `test-user-${errorIndex}-${eventIndex}`,
-                        email: `test-user-${errorIndex}-${eventIndex}@example.com`,
-                        username: `testuser${errorIndex}-${eventIndex}`,
+                        id: `test-user-${errorIndex}-${eventId}`,
+                        email: `test-user-${errorIndex}-${eventId}@example.com`,
+                        username: `testuser${errorIndex}-${eventId}`,
                     },
                     tags: mergedTags,
                 };
