@@ -66,6 +66,9 @@ const ErrorGenerator = () => {
     const [timeRemaining, setTimeRemaining] = useState(0);
     const [isWaiting, setIsWaiting] = useState(false);
 
+    // YOLO mode state
+    const [yoloMode, setYoloMode] = useState(false);
+
     const cancelRef = useRef<HTMLButtonElement>(null);
     const intervalIdRef = useRef<NodeJS.Timeout | null>(null);
     const countdownIdRef = useRef<NodeJS.Timeout | null>(null);
@@ -367,8 +370,29 @@ const ErrorGenerator = () => {
         return intervalMode ? 'Start Interval' : 'Generate Errors';
     };
 
+    const handleGenerateClick = () => {
+        if (yoloMode) {
+            generateErrors();
+        } else {
+            setIsOpen(true);
+        }
+    };
+
     return (
         <VStack spacing={4} align="stretch">
+            <FormControl>
+                <HStack justifyContent="flex-end">
+                    <Switch
+                        id="yolo-mode"
+                        isChecked={yoloMode}
+                        onChange={(e) => setYoloMode(e.target.checked)}
+                        colorScheme="red"
+                    />
+                    <FormLabel htmlFor="yolo-mode" mb={0}>
+                        YOLO Mode
+                    </FormLabel>
+                </HStack>
+            </FormControl>
             <FormControl isInvalid={!!dsnError}>
                 <FormLabel>Sentry DSN</FormLabel>
                 <Input placeholder="Enter your Sentry DSN" value={dsn} onChange={handleDsnChange} />
@@ -572,7 +596,7 @@ const ErrorGenerator = () => {
                     </Button>
                 )}
                 <Button
-                    onClick={() => setIsOpen(true)}
+                    onClick={handleGenerateClick}
                     colorScheme="brand"
                     width="auto"
                     isLoading={isLoading || isIntervalRunning}
