@@ -29,6 +29,9 @@ import {
     IconButton,
     Divider,
     Select,
+    Checkbox,
+    Text,
+    Progress,
 } from '@chakra-ui/react';
 import { FaPlus } from 'react-icons/fa6';
 
@@ -52,6 +55,12 @@ const ErrorGenerator = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [dsnError, setDsnError] = useState('');
+    const [intervalMode, setIntervalMode] = useState(false);
+    const [intervalFrequency, setIntervalFrequency] = useState('30');
+    const [repeatCount, setRepeatCount] = useState('5');
+    const [isIntervalRunning, setIsIntervalRunning] = useState(false);
+    const [currentRepeat, setCurrentRepeat] = useState(0);
+    const [totalRepeats, setTotalRepeats] = useState(0);
     const cancelRef = useRef<HTMLButtonElement>(null);
     const toast = useToast();
 
@@ -109,6 +118,67 @@ const ErrorGenerator = () => {
         setTags(tags.filter((tag) => tag.key !== keyToRemove));
     };
 
+    const sendSingleErrorBatch = async () => {
+        const eventsPerError = parseInt(errorCount, 10);
+        const numErrors = fingerprintID ? 1 : parseInt(errorsToGenerate, 10);
+
+        const response = await fetch('/api/generate-errors', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                dsn,
+                errorCount: eventsPerError,
+                errorsToGenerate: numErrors,
+                fingerprintID,
+                priority,
+                tags: tags.reduce((acc, tag) => ({ ...acc, [tag.key]: tag.value }), {}),
+                message,
+            }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to generate errors');
+        }
+
+        return data;
+    };
+
+    const executeInterval = async (repeats: number, frequency: number) => {
+        setIsIntervalRunning(true);
+        setCurrentRepeat(0);
+        setTotalRepeats(repeats);
+
+        for (let i = 0; i < repeats; i++) {
+            try {
+                setCurrentRepeat(i + 1);
+                await sendSingleErrorBatch();
+
+                if (i < repeats - 1) {
+                    // Don't wait after the last iteration
+                    await new Promise((resolve) => {
+                        setTimeout(resolve, frequency * 1000);
+                    });
+                }
+            } catch (error) {
+                setIsIntervalRunning(false);
+                throw error;
+            }
+        }
+
+        setIsIntervalRunning(false);
+        toast({
+            title: 'Interval complete',
+            description: `Successfully sent ${repeats} error batches`,
+            status: 'success',
+            duration: 5000,
+            isClosable: true,
+        });
+    };
+
     const generateErrors = async () => {
         if (!validateDsn(dsn)) return;
 
@@ -137,40 +207,53 @@ const ErrorGenerator = () => {
             return;
         }
 
+        // Validate interval mode inputs
+        if (intervalMode) {
+            const frequency = parseInt(intervalFrequency, 10);
+            const repeats = parseInt(repeatCount, 10);
+
+            if (isNaN(frequency) || frequency <= 0) {
+                toast({
+                    title: 'Invalid interval frequency',
+                    description: 'Please enter a positive number for interval frequency',
+                    status: 'error',
+                    duration: 3000,
+                    isClosable: true,
+                });
+                return;
+            }
+
+            if (isNaN(repeats) || repeats <= 0) {
+                toast({
+                    title: 'Invalid repeat count',
+                    description: 'Please enter a positive number for repeat count',
+                    status: 'error',
+                    duration: 3000,
+                    isClosable: true,
+                });
+                return;
+            }
+        }
+
         setIsLoading(true);
 
         try {
-            const response = await fetch('/api/generate-errors', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    dsn,
-                    errorCount: eventsPerError,
-                    errorsToGenerate: numErrors,
-                    fingerprintID,
-                    priority,
-                    tags: tags.reduce((acc, tag) => ({ ...acc, [tag.key]: tag.value }), {}),
-                    message,
-                }),
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.error || 'Failed to generate errors');
+            if (intervalMode) {
+                const frequency = parseInt(intervalFrequency, 10);
+                const repeats = parseInt(repeatCount, 10);
+                await executeInterval(repeats, frequency);
+            } else {
+                const data = await sendSingleErrorBatch();
+                toast({
+                    title: 'Errors sent',
+                    description:
+                        data.message ||
+                        `${numErrors} errors with ${eventsPerError} events each have been sent to Sentry`,
+                    status: 'success',
+                    duration: 3000,
+                    isClosable: true,
+                });
             }
-
-            toast({
-                title: 'Errors sent',
-                description:
-                    data.message ||
-                    `${numErrors} errors with ${eventsPerError} events each have been sent to Sentry`,
-                status: 'success',
-                duration: 3000,
-                isClosable: true,
-            });
         } catch (error) {
             toast({
                 title: 'Error',
@@ -181,13 +264,36 @@ const ErrorGenerator = () => {
             });
         } finally {
             setIsLoading(false);
+            setIsIntervalRunning(false);
         }
+    };
+
+    const stopInterval = () => {
+        setIsIntervalRunning(false);
+        setIsLoading(false);
+        toast({
+            title: 'Interval stopped',
+            description: `Stopped after ${currentRepeat} of ${totalRepeats} iterations`,
+            status: 'warning',
+            duration: 3000,
+            isClosable: true,
+        });
     };
 
     const onClose = () => setIsOpen(false);
     const onConfirm = () => {
         onClose();
         generateErrors();
+    };
+
+    const getButtonText = () => {
+        if (isIntervalRunning) {
+            return `Running (${currentRepeat}/${totalRepeats})`;
+        }
+        if (isLoading) {
+            return intervalMode ? 'Starting...' : 'Generating...';
+        }
+        return intervalMode ? 'Start Interval' : 'Generate Errors';
     };
 
     return (
@@ -251,6 +357,73 @@ const ErrorGenerator = () => {
             <Divider />
 
             <FormControl>
+                <Checkbox
+                    isChecked={intervalMode}
+                    onChange={(e) => setIntervalMode(e.target.checked)}
+                    colorScheme="brand"
+                >
+                    <FormLabel mb={0} ml={2}>
+                        Enable Repeat Mode
+                    </FormLabel>
+                </Checkbox>
+                {intervalMode && (
+                    <Text fontSize="sm" color="gray.600" mt={1}>
+                        Send the same error configuration multiple times at regular intervals
+                    </Text>
+                )}
+            </FormControl>
+
+            {intervalMode && (
+                <VStack spacing={3} align="stretch">
+                    <HStack spacing={4}>
+                        <FormControl flex={1}>
+                            <FormLabel>Interval (seconds)</FormLabel>
+                            <NumberInput
+                                min={1}
+                                value={intervalFrequency}
+                                onChange={(value) => setIntervalFrequency(value)}
+                            >
+                                <NumberInputField />
+                                <NumberInputStepper>
+                                    <NumberIncrementStepper />
+                                    <NumberDecrementStepper />
+                                </NumberInputStepper>
+                            </NumberInput>
+                        </FormControl>
+                        <FormControl flex={1}>
+                            <FormLabel>Number of Repeats</FormLabel>
+                            <NumberInput
+                                min={1}
+                                value={repeatCount}
+                                onChange={(value) => setRepeatCount(value)}
+                            >
+                                <NumberInputField />
+                                <NumberInputStepper>
+                                    <NumberIncrementStepper />
+                                    <NumberDecrementStepper />
+                                </NumberInputStepper>
+                            </NumberInput>
+                        </FormControl>
+                    </HStack>
+
+                    {isIntervalRunning && (
+                        <Box>
+                            <Text fontSize="sm" mb={2}>
+                                Progress: {currentRepeat} of {totalRepeats} completed
+                            </Text>
+                            <Progress
+                                value={(currentRepeat / totalRepeats) * 100}
+                                colorScheme="brand"
+                                size="sm"
+                            />
+                        </Box>
+                    )}
+                </VStack>
+            )}
+
+            <Divider />
+
+            <FormControl>
                 <FormLabel>Custom Tags (Optional)</FormLabel>
                 <VStack align="stretch" spacing={3}>
                     <HStack>
@@ -300,28 +473,46 @@ const ErrorGenerator = () => {
                 </VStack>
             </FormControl>
 
-            <Box textAlign="right">
+            <HStack justifyContent="flex-end" spacing={3}>
+                {isIntervalRunning && (
+                    <Button onClick={stopInterval} colorScheme="red" variant="outline" size="md">
+                        Stop Interval
+                    </Button>
+                )}
                 <Button
                     onClick={() => setIsOpen(true)}
                     colorScheme="brand"
                     width="auto"
-                    isLoading={isLoading}
-                    loadingText="Generating..."
+                    isLoading={isLoading || isIntervalRunning}
+                    loadingText={getButtonText()}
+                    isDisabled={isIntervalRunning}
                 >
-                    Generate Errors
+                    {getButtonText()}
                 </Button>
-            </Box>
+            </HStack>
 
             <AlertDialog isOpen={isOpen} leastDestructiveRef={cancelRef} onClose={onClose}>
                 <AlertDialogOverlay>
                     <AlertDialogContent>
                         <AlertDialogHeader fontSize="lg" fontWeight="bold">
-                            Generate Errors
+                            {intervalMode ? 'Start Interval Mode' : 'Generate Errors'}
                         </AlertDialogHeader>
                         <AlertDialogBody>
-                            Warning: This action will generate real errors and use up your Sentry
-                            quota. This may result in additional costs depending on your Sentry
-                            plan. Are you sure you want to proceed?
+                            {intervalMode ? (
+                                <>
+                                    Warning: This will generate errors every {intervalFrequency}{' '}
+                                    seconds, repeated {repeatCount} times. This action will generate
+                                    real errors and use up your Sentry quota significantly. This may
+                                    result in substantial additional costs depending on your Sentry
+                                    plan. Are you sure you want to proceed?
+                                </>
+                            ) : (
+                                <>
+                                    Warning: This action will generate real errors and use up your
+                                    Sentry quota. This may result in additional costs depending on
+                                    your Sentry plan. Are you sure you want to proceed?
+                                </>
+                            )}
                         </AlertDialogBody>
                         <AlertDialogFooter>
                             <Button ref={cancelRef} onClick={onClose}>
@@ -333,7 +524,7 @@ const ErrorGenerator = () => {
                                 ml={3}
                                 isLoading={isLoading}
                             >
-                                Generate Errors
+                                {intervalMode ? 'Start Interval' : 'Generate Errors'}
                             </Button>
                         </AlertDialogFooter>
                     </AlertDialogContent>
