@@ -51,6 +51,7 @@ Generate test errors and send them to your Sentry project.
 | `errorsToGenerate` | number | No | 1 | Number of different errors to generate |
 | `fingerprintID` | string | No | - | Custom fingerprint ID. If provided, only 1 error will be generated with this fingerprint |
 | `priority` | string | No | 'HIGH' | Error priority level (`HIGH`, `MEDIUM`, `LOW`) |
+| `message` | string | No | - | Custom error message. If not provided, uses default format with event ID and priority |
 | `tags` | object | No | {} | Custom tags to attach to the errors |
 
 #### Priority Mapping
@@ -126,6 +127,24 @@ curl -X POST https://error-generator.sentry.dev/api/generate-errors \
   }'
 ```
 
+##### Error with Custom Message
+
+Generate an error with a custom message:
+
+```bash
+curl -X POST https://error-generator.sentry.dev/api/generate-errors \
+  -H "Content-Type: application/json" \
+  -d '{
+    "dsn": "https://your-public-key@your-host.ingest.sentry.io/your-project-id",
+    "message": "Payment processing failed for user transaction",
+    "priority": "HIGH",
+    "tags": {
+      "service": "payment-gateway",
+      "user_id": "12345"
+    }
+  }'
+```
+
 ##### Error with Custom Fingerprint
 
 Generate an error with a specific fingerprint for grouping:
@@ -159,4 +178,5 @@ Common error scenarios:
 
 - Custom tags will override default tags (including environment)
 - When using `fingerprintID`, only 1 error will be generated regardless of `errorsToGenerate` value
-- All errors are automatically tagged with `generated_by: 'vercel-edge-function'`
+- Custom message, if provided, will replace the default message format
+- All errors are automatically tagged with `generated_by: 'error-generator.sentry.dev'`
