@@ -48,6 +48,7 @@ const ErrorGenerator = () => {
     const [tags, setTags] = useState<CustomTag[]>([]);
     const [newTagKey, setNewTagKey] = useState('');
     const [newTagValue, setNewTagValue] = useState('');
+    const [message, setMessage] = useState('');
     const [isOpen, setIsOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [dsnError, setDsnError] = useState('');
@@ -151,6 +152,7 @@ const ErrorGenerator = () => {
                     fingerprintID,
                     priority,
                     tags: tags.reduce((acc, tag) => ({ ...acc, [tag.key]: tag.value }), {}),
+                    message,
                 }),
             });
 
@@ -202,6 +204,14 @@ const ErrorGenerator = () => {
                     <option value="MEDIUM">Medium</option>
                     <option value="LOW">Low</option>
                 </Select>
+            </FormControl>
+            <FormControl>
+                <FormLabel>Custom Message (Optional)</FormLabel>
+                <Input
+                    placeholder="Enter a custom error message"
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                />
             </FormControl>
             <FormControl>
                 <FormLabel>Fingerprint (Optional)</FormLabel>

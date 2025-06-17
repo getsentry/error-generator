@@ -10,6 +10,7 @@ interface GenerateErrorsRequest {
     fingerprintID?: string;
     priority?: 'HIGH' | 'MEDIUM' | 'LOW';
     tags?: Record<string, string>;
+    message?: string;
 }
 
 export async function POST(request: NextRequest) {
@@ -23,6 +24,7 @@ export async function POST(request: NextRequest) {
             fingerprintID,
             priority = 'HIGH',
             tags = {},
+            message,
         } = requestData;
 
         if (!dsn) {
@@ -85,8 +87,8 @@ export async function POST(request: NextRequest) {
 
                 // Merge default tags with custom tags, allowing custom tags to override defaults
                 const defaultTags = {
-                    generated_by: 'vercel-edge-function',
-                    environment: 'test',
+                    generated_by: 'error-generator.sentry.dev',
+                    environment: 'default',
                 };
 
                 const mergedTags = {
@@ -104,7 +106,9 @@ export async function POST(request: NextRequest) {
                     transaction: `test-transaction-${errorIndex}-${eventId}`,
                     server_name: 'vercel-edge-function',
                     fingerprint: errorFingerprint,
-                    message: `Error generated with event_id: ${eventId} (Priority: ${priority})`,
+                    message:
+                        message ||
+                        `Error generated with event_id: ${eventId} (Priority: ${priority})`,
                     user: {
                         id: `test-user-${errorIndex}-${eventId}`,
                         email: `test-user-${errorIndex}-${eventId}@example.com`,
