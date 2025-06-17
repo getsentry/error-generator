@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
     Button,
     Input,
@@ -29,7 +29,7 @@ import {
     IconButton,
     Divider,
     Select,
-    Checkbox,
+    Switch,
     Text,
     Progress,
 } from '@chakra-ui/react';
@@ -55,14 +55,33 @@ const ErrorGenerator = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [dsnError, setDsnError] = useState('');
+
+    // Interval mode states
     const [intervalMode, setIntervalMode] = useState(false);
     const [intervalFrequency, setIntervalFrequency] = useState('30');
     const [repeatCount, setRepeatCount] = useState('5');
     const [isIntervalRunning, setIsIntervalRunning] = useState(false);
     const [currentRepeat, setCurrentRepeat] = useState(0);
     const [totalRepeats, setTotalRepeats] = useState(0);
+    const [timeRemaining, setTimeRemaining] = useState(0);
+    const [isWaiting, setIsWaiting] = useState(false);
+
     const cancelRef = useRef<HTMLButtonElement>(null);
+    const intervalIdRef = useRef<NodeJS.Timeout | null>(null);
+    const countdownIdRef = useRef<NodeJS.Timeout | null>(null);
     const toast = useToast();
+
+    // Cleanup intervals on unmount
+    useEffect(() => {
+        return () => {
+            if (intervalIdRef.current) {
+                clearTimeout(intervalIdRef.current);
+            }
+            if (countdownIdRef.current) {
+                clearInterval(countdownIdRef.current);
+            }
+        };
+    }, []);
 
     const validateDsn = (value: string): boolean => {
         if (!value) {
@@ -118,6 +137,34 @@ const ErrorGenerator = () => {
         setTags(tags.filter((tag) => tag.key !== keyToRemove));
     };
 
+    const formatTime = (seconds: number): string => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    };
+
+    const startCountdown = (duration: number): Promise<void> => {
+        return new Promise((resolve) => {
+            setTimeRemaining(duration);
+            setIsWaiting(true);
+
+            countdownIdRef.current = setInterval(() => {
+                setTimeRemaining((prev) => {
+                    if (prev <= 1) {
+                        if (countdownIdRef.current) {
+                            clearInterval(countdownIdRef.current);
+                            countdownIdRef.current = null;
+                        }
+                        setIsWaiting(false);
+                        resolve();
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+        });
+    };
+
     const sendSingleErrorBatch = async () => {
         const eventsPerError = parseInt(errorCount, 10);
         const numErrors = fingerprintID ? 1 : parseInt(errorsToGenerate, 10);
@@ -155,21 +202,35 @@ const ErrorGenerator = () => {
         for (let i = 0; i < repeats; i++) {
             try {
                 setCurrentRepeat(i + 1);
-                await sendSingleErrorBatch();
+                const data = await sendSingleErrorBatch();
+
+                // Show toast for each interval execution
+                const eventsPerError = parseInt(errorCount, 10);
+                const numErrors = fingerprintID ? 1 : parseInt(errorsToGenerate, 10);
+
+                toast({
+                    title: `Batch ${i + 1} of ${repeats} sent`,
+                    description:
+                        data.message ||
+                        `${numErrors} errors with ${eventsPerError} events each sent to Sentry`,
+                    status: 'success',
+                    duration: 2000,
+                    isClosable: true,
+                });
 
                 if (i < repeats - 1) {
                     // Don't wait after the last iteration
-                    await new Promise((resolve) => {
-                        setTimeout(resolve, frequency * 1000);
-                    });
+                    await startCountdown(frequency);
                 }
             } catch (error) {
                 setIsIntervalRunning(false);
+                setIsWaiting(false);
                 throw error;
             }
         }
 
         setIsIntervalRunning(false);
+        setIsWaiting(false);
         toast({
             title: 'Interval complete',
             description: `Successfully sent ${repeats} error batches`,
@@ -265,11 +326,21 @@ const ErrorGenerator = () => {
         } finally {
             setIsLoading(false);
             setIsIntervalRunning(false);
+            setIsWaiting(false);
         }
     };
 
     const stopInterval = () => {
+        if (intervalIdRef.current) {
+            clearTimeout(intervalIdRef.current);
+            intervalIdRef.current = null;
+        }
+        if (countdownIdRef.current) {
+            clearInterval(countdownIdRef.current);
+            countdownIdRef.current = null;
+        }
         setIsIntervalRunning(false);
+        setIsWaiting(false);
         setIsLoading(false);
         toast({
             title: 'Interval stopped',
@@ -357,17 +428,19 @@ const ErrorGenerator = () => {
             <Divider />
 
             <FormControl>
-                <Checkbox
-                    isChecked={intervalMode}
-                    onChange={(e) => setIntervalMode(e.target.checked)}
-                    colorScheme="brand"
-                >
-                    <FormLabel mb={0} ml={2}>
-                        Enable Repeat Mode
+                <HStack>
+                    <Switch
+                        id="interval-mode"
+                        isChecked={intervalMode}
+                        onChange={(e) => setIntervalMode(e.target.checked)}
+                        colorScheme="brand"
+                    />
+                    <FormLabel htmlFor="interval-mode" mb={0}>
+                        Enable Batch Mode
                     </FormLabel>
-                </Checkbox>
+                </HStack>
                 {intervalMode && (
-                    <Text fontSize="sm" color="gray.600" mt={1}>
+                    <Text fontSize="sm" color="white" mt={1}>
                         Send the same error configuration multiple times at regular intervals
                     </Text>
                 )}
@@ -408,14 +481,33 @@ const ErrorGenerator = () => {
 
                     {isIntervalRunning && (
                         <Box>
-                            <Text fontSize="sm" mb={2}>
-                                Progress: {currentRepeat} of {totalRepeats} completed
-                            </Text>
+                            <HStack justifyContent="space-between" mb={2}>
+                                <Text fontSize="sm">
+                                    Progress: {currentRepeat} of {totalRepeats} completed
+                                </Text>
+                                {isWaiting && (
+                                    <Text fontSize="sm" color="orange.500" fontWeight="medium">
+                                        Next in: {formatTime(timeRemaining)}
+                                    </Text>
+                                )}
+                            </HStack>
                             <Progress
                                 value={(currentRepeat / totalRepeats) * 100}
                                 colorScheme="brand"
                                 size="sm"
                             />
+                            {isWaiting && (
+                                <Progress
+                                    value={
+                                        ((parseInt(intervalFrequency, 10) - timeRemaining) /
+                                            parseInt(intervalFrequency, 10)) *
+                                        100
+                                    }
+                                    colorScheme="orange"
+                                    size="xs"
+                                    mt={1}
+                                />
+                            )}
                         </Box>
                     )}
                 </VStack>
@@ -461,7 +553,7 @@ const ErrorGenerator = () => {
                     {tags.length > 0 && (
                         <Flex wrap="wrap" gap={2}>
                             {tags.map((tag) => (
-                                <Tag key={tag.key} size="md" variant="solid" colorScheme="blue">
+                                <Tag key={tag.key} size="md" variant="solid" colorScheme="brand">
                                     <TagLabel>
                                         {tag.key}: {tag.value}
                                     </TagLabel>
