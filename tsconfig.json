@@ -21,12 +21,8 @@
         "name": "next"
       }
     ],
-    "paths": {
-      "@/*": [
-        "./*"
-      ]
-    },
-    "target": "ES2017"
+    "paths": {"@/*": ["./*"]},
+    "target": "esnext"
   },
   "include": [
     "next-env.d.ts",
