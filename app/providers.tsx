@@ -1,8 +1,14 @@
 'use client';
 
-import { ChakraProvider } from '@chakra-ui/react';
-import theme from './theme';
+import { lightTheme } from './theme';
+import { ThemeProvider } from '@emotion/react';
+import { GlobalStyles } from './styles';
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  return <ChakraProvider theme={theme}>{children}</ChakraProvider>;
+  return (
+    <ThemeProvider theme={lightTheme}>
+      <GlobalStyles />
+      {children}
+    </ThemeProvider>
+  );
 }

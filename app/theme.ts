@@ -1,5 +1,84 @@
 import { extendTheme, type ThemeConfig } from '@chakra-ui/react';
+import { Theme } from '@emotion/react';
 import '@fontsource/rubik';
+
+export const lightTheme: Theme = {
+  colors: {
+    surface500: '#FFFFFF',
+    surface400: '#F7F6FB',
+    surface300: '#F1EEF9',
+    surface200: '#EAE7F6',
+    surface100: '#DFDBEF',
+    gray100: 'rgba(112, 124, 137, 0.05)',
+    gray200: 'rgba(112, 124, 137, 0.09)',
+    gray300: '#707C89',
+    gray400: '#57606B',
+    gray500: '#181423',
+    purple100: 'rgba(132, 102, 255, 0.05)',
+    purple200: 'rgba(132, 102, 255, 0.09)',
+    purple300: '#8466FF',
+    purple400: '#6C02FF',
+    blue100: 'rgba(132, 102, 255, 0.05)',
+    blue200: 'rgba(132, 102, 255, 0.09)',
+    blue300: '#8466FF',
+    blue400: '#6C02FF',
+    green100: 'rgba(6, 172, 61, 0.04)',
+    green200: 'rgba(6, 172, 61, 0.07)',
+    green300: '#06AC3D',
+    green400: '#06892F',
+    yellow100: 'rgba(243, 176, 27, 0.07)',
+    yellow200: 'rgba(243, 176, 27, 0.17)',
+    yellow300: '#F3B01B',
+    yellow400: '#E66000',
+    red100: 'rgba(255, 0, 43, 0.04)',
+    red200: 'rgba(255, 0, 43, 0.08)',
+    red300: '#FF002B',
+    red400: '#CB0020',
+    pink100: 'rgba(255, 78, 179, 0.06)',
+    pink200: 'rgba(255, 78, 179, 0.12)',
+    pink300: '#FF4EB3',
+    pink400: '#D5008D',
+  },
+};
+
+export const darkTheme: Theme = {
+  colors: {
+    surface500: '#272433',
+    surface400: '#231E2F',
+    surface300: '#191621',
+    surface200: '#0D071A',
+    surface100: '#000000',
+    gray100: 'rgba(110, 110, 119, 0.20)',
+    gray200: 'rgba(110, 110, 119, 0.28)',
+    gray300: 'rgba(110, 110, 119, 0.38)',
+    gray400: '#6F6F78',
+    gray500: '#A39EB3',
+    purple100: 'rgba(137, 112, 255, 0.14)',
+    purple200: 'rgba(137, 112, 255, 0.20)',
+    purple300: '#8970FF',
+    purple400: '#9B8DFF',
+    blue100: 'rgba(137, 112, 255, 0.14)',
+    blue200: 'rgba(137, 112, 255, 0.20)',
+    blue300: '#8970FF',
+    blue400: '#9B8DFF',
+    green100: 'rgba(9, 179, 64, 0.20)',
+    green200: 'rgba(9, 179, 64, 0.26)',
+    green300: '#09B340',
+    green400: '#0CC848',
+    yellow100: 'rgba(247, 179, 28, 0.09)',
+    yellow200: 'rgba(247, 179, 28, 0.13)',
+    yellow300: '#F7B31C',
+    yellow400: '#FDCF20',
+    red100: 'rgba(255, 51, 60, 0.16)',
+    red200: 'rgba(255, 51, 60, 0.20)',
+    red300: '#FF333C',
+    red400: '#FF6B65',
+    pink100: 'rgba(255, 92, 182, 0.11)',
+    pink200: 'rgba(255, 92, 182, 0.15)',
+    pink300: '#FF5CB6',
+    pink400: '#FF8BC6',
+  },
+};
 
 const config: ThemeConfig = {
   initialColorMode: 'dark',
@@ -49,6 +128,13 @@ const colors = {
   background: {
     dark: '#181225', // Rich Black from brand colors
     grey: '#F6F6F8', // Background Grey
+  },
+  gray: {
+    100: 'rgba(112, 124, 137, 0.05)',
+    200: 'rgba(112, 124, 137, 0.09)',
+    300: '#707C89',
+    400: '#57606B',
+    500: '#181423',
   },
   // Gradient colors for potential use
   gradient: {
