@@ -1,14 +1,22 @@
 import React from 'react';
-import { Box, Container, Heading, Text, VStack, Link } from '@chakra-ui/react';
-import ErrorGenerator from './ErrorGenerator';
+// import { Box, Container, Heading, Text, VStack, Link } from '@chakra-ui/react';
+// import ErrorGenerator from './ErrorGenerator';
 import { Button } from '@/app/components/button';
+import { Input } from '@/app/components/input';
 
 export default function Page() {
   return (
     <>
       <Button>Click me</Button>
       <Button disabled>Click me</Button>
-      <Box
+      <div style={{ margin: '16px 0', maxWidth: '300px' }}>
+        <Input placeholder="Placeholder" />
+        <Input disabled placeholder="Disabled" />
+        <Input type="number" placeholder="1" />
+        <Input disabled type="number" placeholder="Disabled" />
+      </div>
+
+      {/* <Box
         minHeight="100vh"
         bg="background.dark"
         color="white"
@@ -38,7 +46,7 @@ export default function Page() {
             </Link>
           </Text>
         </Box>
-      </Box>
+      </Box> */}
     </>
   );
 }
