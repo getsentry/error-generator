@@ -3,7 +3,6 @@
 @theme {
     --color-brutal-black: #0a0a0a;
     --color-brutal-white: #f5f0e8;
-    --color-brutal-cream: #fff8f0;
 
     --color-hero-purple: #9d7aff;
     --color-hero-violet: #7b5fcc;
@@ -15,7 +14,6 @@
 
     --color-bg-dark: #1a1625;
     --color-bg-panel: #252033;
-    --color-bg-contrast: #fff8f0;
 
     --font-rubik: 'Rubik', sans-serif;
 }
@@ -46,19 +44,6 @@ body {
 ::selection {
     background: var(--color-hero-coral);
     color: white;
-}
-
-.btn-brutal {
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    border: 3px solid var(--color-brutal-white);
-    transition: all 0.1s ease-in-out;
-    cursor: pointer;
-}
-
-.btn-brutal:hover {
-    box-shadow: 4px 4px 0 0 white;
 }
 
 .btn-purple {
@@ -183,18 +168,6 @@ body {
     color: var(--color-brutal-black);
 }
 
-.tag-purple {
-    background-color: var(--color-hero-purple);
-    color: var(--color-brutal-white);
-    border-color: var(--color-brutal-white);
-}
-
-.tag-gold {
-    background-color: var(--color-hero-gold);
-    color: var(--color-brutal-black);
-    border-color: var(--color-brutal-black);
-}
-
 .label-brutal {
     font-weight: 700;
     text-transform: uppercase;
@@ -224,8 +197,8 @@ body {
     height: 1.25rem;
     background-color: var(--color-brutal-white);
     position: absolute;
-    top: 0.0625rem;
-    left: 0.0625rem;
+    top: 0;
+    left: 0;
     transition: transform 0.15s ease;
 }
 
@@ -247,20 +220,6 @@ body {
     transition: width 0.3s ease;
 }
 
-.progress-fill.coral {
-    background-color: var(--color-hero-coral);
-}
-
-.progress-fill.gold {
-    background-color: var(--color-hero-gold);
-}
-
-.divider-brutal {
-    border: none;
-    border-top: 2px dashed var(--color-hero-violet);
-    margin: 1.5rem 0;
-}
-
 .bg-grid {
     background-image:
         linear-gradient(rgba(157, 122, 255, 0.04) 1px, transparent 1px),
@@ -280,47 +239,6 @@ body {
     border-bottom: 2px solid var(--color-hero-coral);
     padding-bottom: 1rem;
     margin-bottom: 1rem;
-}
-
-@keyframes float {
-    0%,
-    100% {
-        transform: translateY(0) rotate(0deg);
-    }
-    50% {
-        transform: translateY(-20px) rotate(5deg);
-    }
-}
-
-@keyframes spin-slow {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
-}
-
-@keyframes pulse-glow {
-    0%,
-    100% {
-        box-shadow: 0 0 0 0 rgba(0, 206, 209, 0);
-    }
-    50% {
-        box-shadow: 0 0 20px 5px rgba(0, 206, 209, 0.3);
-    }
-}
-
-.animate-float {
-    animation: float 4s ease-in-out infinite;
-}
-
-.animate-spin-slow {
-    animation: spin-slow 20s linear infinite;
-}
-
-.animate-pulse-glow {
-    animation: pulse-glow 2s ease-in-out infinite;
 }
 
 .border-3 {
