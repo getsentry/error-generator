@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 
 interface BatchModeState {
     enabled: boolean;
@@ -29,6 +29,12 @@ export const useBatchMode = (
 
     const countdownIdRef = useRef<NodeJS.Timeout | null>(null);
     const stoppedRef = useRef(false);
+
+    useEffect(() => {
+        return () => {
+            if (countdownIdRef.current) clearInterval(countdownIdRef.current);
+        };
+    }, []);
 
     const setEnabled = (enabled: boolean) => setState((s) => ({ ...s, enabled }));
     const setFrequency = (frequency: string) => setState((s) => ({ ...s, frequency }));
@@ -108,10 +114,11 @@ export const useBatchMode = (
     const stop = useCallback(() => {
         stoppedRef.current = true;
         if (countdownIdRef.current) clearInterval(countdownIdRef.current);
-        const { currentRepeat, totalRepeats } = state;
-        setState((s) => ({ ...s, isRunning: false, isWaiting: false }));
-        showToast('Stopped', `After ${currentRepeat}/${totalRepeats}`, 'warning');
-    }, [state.currentRepeat, state.totalRepeats, showToast]);
+        setState((s) => {
+            showToast('Stopped', `After ${s.currentRepeat}/${s.totalRepeats}`, 'warning');
+            return { ...s, isRunning: false, isWaiting: false };
+        });
+    }, [showToast]);
 
     const validate = (): boolean => {
         const frequency = parseInt(state.frequency, 10);
