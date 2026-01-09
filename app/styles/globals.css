@@ -111,7 +111,7 @@ body {
 }
 
 .input-brutal {
-    background-color: var(--color-brutal-black);
+    background-color: var(--color-bg-panel);
     border: 3px solid var(--color-brutal-white);
     color: var(--color-brutal-white);
     transition:
@@ -135,7 +135,7 @@ body {
 }
 
 .select-brutal {
-    background-color: var(--color-brutal-black);
+    background-color: var(--color-bg-panel);
     border: 3px solid var(--color-brutal-white);
     color: var(--color-brutal-white);
     transition:
