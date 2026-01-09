@@ -1,5 +1,8 @@
 import React from 'react';
-import { Providers } from './providers';
+import '@/app/styles/globals.css';
+import '@fontsource/rubik/400.css';
+import '@fontsource/rubik/700.css';
+import '@fontsource/rubik/900.css';
 
 export const metadata = {
     title: 'Sentry Error Generator',
@@ -9,9 +12,7 @@ export const metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
     return (
         <html lang="en">
-            <body>
-                <Providers>{children}</Providers>
-            </body>
+            <body>{children}</body>
         </html>
     );
 }
