@@ -124,6 +124,38 @@ export const useErrorForm = (
         },
     });
 
+    const getConfig = () => ({
+        dsn: form.dsn,
+        message: form.message,
+        priority: form.priority,
+        tags: form.tags,
+        errorCount: form.errorCount,
+        errorsToGenerate: form.errorsToGenerate,
+        fingerprintID: form.fingerprintID,
+    });
+
+    const loadConfig = (config: {
+        dsn: string;
+        message: string;
+        priority: Priority;
+        tags: CustomTag[];
+        errorCount: string;
+        errorsToGenerate: string;
+        fingerprintID: string;
+    }) => {
+        setForm((f) => ({
+            ...f,
+            dsn: config.dsn,
+            message: config.message,
+            priority: config.priority,
+            tags: config.tags,
+            errorCount: config.errorCount,
+            errorsToGenerate: config.errorsToGenerate,
+            fingerprintID: config.fingerprintID,
+            dsnError: '',
+        }));
+    };
+
     return {
         ...form,
         newTagKey,
@@ -137,5 +169,7 @@ export const useErrorForm = (
         validate,
         getPayload,
         getPreviewPayload,
+        getConfig,
+        loadConfig,
     };
 };
