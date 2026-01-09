@@ -1,30 +1,12 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { fadeInUp } from '@/app/styles/animations';
+import { fadeInUp, slideInRight, slideInRightItem } from '@/app/styles/animations';
 import { BatchMode } from '@/app/hooks/useBatchMode';
 
 interface BatchModePanelProps {
     batch: BatchMode;
 }
-
-const batchControlsVariants = {
-    hidden: { opacity: 0, x: 20 },
-    visible: {
-        opacity: 1,
-        x: 0,
-        transition: {
-            staggerChildren: 0.05,
-        },
-    },
-    exit: { opacity: 0, x: 20, transition: { duration: 0.15 } },
-};
-
-const batchItemVariants = {
-    hidden: { opacity: 0, x: 10 },
-    visible: { opacity: 1, x: 0 },
-    exit: { opacity: 0, x: 10 },
-};
 
 export const BatchModePanel = ({ batch }: BatchModePanelProps) => {
     const progress = batch.totalRepeats > 0 ? (batch.currentRepeat / batch.totalRepeats) * 100 : 0;
@@ -46,13 +28,13 @@ export const BatchModePanel = ({ batch }: BatchModePanelProps) => {
                     {batch.enabled && (
                         <motion.div
                             className="flex gap-3"
-                            variants={batchControlsVariants}
+                            variants={slideInRight}
                             initial="hidden"
                             animate="visible"
                             exit="exit"
                         >
                             <motion.div
-                                variants={batchItemVariants}
+                                variants={slideInRightItem}
                                 className="flex items-center gap-2"
                             >
                                 <span className="text-sm text-brutal-white/70">every</span>
@@ -66,7 +48,7 @@ export const BatchModePanel = ({ batch }: BatchModePanelProps) => {
                                 <span className="text-sm text-brutal-white/70">sec,</span>
                             </motion.div>
                             <motion.div
-                                variants={batchItemVariants}
+                                variants={slideInRightItem}
                                 className="flex items-center gap-2"
                             >
                                 <input

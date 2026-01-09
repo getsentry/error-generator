@@ -30,14 +30,6 @@ export const ConfigPanel = ({
         setIsNaming(false);
     };
 
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === 'Enter') handleSave();
-        if (e.key === 'Escape') {
-            setIsNaming(false);
-            setNewName('');
-        }
-    };
-
     return (
         <motion.div
             variants={fadeInUp}
@@ -58,7 +50,7 @@ export const ConfigPanel = ({
                                 type="text"
                                 value={newName}
                                 onChange={(e) => setNewName(e.target.value)}
-                                onKeyDown={handleKeyDown}
+                                onKeyDown={(e) => e.key === 'Enter' && handleSave()}
                                 placeholder="Config name"
                                 className="input-brutal px-2 py-1 text-xs w-32"
                                 autoFocus

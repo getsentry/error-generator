@@ -23,6 +23,30 @@ const STORAGE_KEY_CURRENT = 'error-generator:current';
 const STORAGE_KEY_SAVED = 'error-generator:saved';
 const STORAGE_KEY_ACTIVE = 'error-generator:active';
 
+const safeGetItem = (key: string): string | null => {
+    try {
+        return localStorage.getItem(key);
+    } catch {
+        return null;
+    }
+};
+
+const safeSetItem = (key: string, value: string): void => {
+    try {
+        localStorage.setItem(key, value);
+    } catch {
+        // localStorage full or unavailable
+    }
+};
+
+const safeRemoveItem = (key: string): void => {
+    try {
+        localStorage.removeItem(key);
+    } catch {
+        // localStorage unavailable
+    }
+};
+
 const defaultConfig: ConfigData = {
     dsn: '',
     message: '',
@@ -63,38 +87,32 @@ export const useConfigStorage = () => {
 
     useEffect(() => {
         setMounted(true);
-        try {
-            const storedCurrent = localStorage.getItem(STORAGE_KEY_CURRENT);
-            if (storedCurrent) {
+        const storedCurrent = safeGetItem(STORAGE_KEY_CURRENT);
+        if (storedCurrent) {
+            try {
                 const parsed = JSON.parse(storedCurrent);
-                if (isValidConfig(parsed)) {
-                    setCurrentConfig(parsed);
-                }
+                if (isValidConfig(parsed)) setCurrentConfig(parsed);
+            } catch {
+                // Invalid JSON
             }
-            const storedSaved = localStorage.getItem(STORAGE_KEY_SAVED);
-            if (storedSaved) {
-                const parsed = JSON.parse(storedSaved);
-                if (parsed && typeof parsed === 'object') {
-                    setSavedConfigs(parsed);
-                }
-            }
-            const storedActive = localStorage.getItem(STORAGE_KEY_ACTIVE);
-            if (storedActive) {
-                setActiveConfigName(storedActive);
-            }
-        } catch {
-            // Invalid localStorage data, use defaults
         }
+        const storedSaved = safeGetItem(STORAGE_KEY_SAVED);
+        if (storedSaved) {
+            try {
+                const parsed = JSON.parse(storedSaved);
+                if (parsed && typeof parsed === 'object') setSavedConfigs(parsed);
+            } catch {
+                // Invalid JSON
+            }
+        }
+        const storedActive = safeGetItem(STORAGE_KEY_ACTIVE);
+        if (storedActive) setActiveConfigName(storedActive);
     }, []);
 
     const persistCurrent = useCallback((config: ConfigData) => {
         if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
         saveTimeoutRef.current = setTimeout(() => {
-            try {
-                localStorage.setItem(STORAGE_KEY_CURRENT, JSON.stringify(config));
-            } catch {
-                // localStorage full or unavailable
-            }
+            safeSetItem(STORAGE_KEY_CURRENT, JSON.stringify(config));
         }, 300);
     }, []);
 
@@ -104,11 +122,7 @@ export const useConfigStorage = () => {
             setActiveConfigName(null);
             if (mounted) {
                 persistCurrent(config);
-                try {
-                    localStorage.removeItem(STORAGE_KEY_ACTIVE);
-                } catch {
-                    // localStorage unavailable
-                }
+                safeRemoveItem(STORAGE_KEY_ACTIVE);
             }
         },
         [mounted, persistCurrent]
@@ -119,12 +133,8 @@ export const useConfigStorage = () => {
             const newSaved = { ...savedConfigs, [name]: currentConfig };
             setSavedConfigs(newSaved);
             setActiveConfigName(name);
-            try {
-                localStorage.setItem(STORAGE_KEY_SAVED, JSON.stringify(newSaved));
-                localStorage.setItem(STORAGE_KEY_ACTIVE, name);
-            } catch {
-                // localStorage full or unavailable
-            }
+            safeSetItem(STORAGE_KEY_SAVED, JSON.stringify(newSaved));
+            safeSetItem(STORAGE_KEY_ACTIVE, name);
         },
         [savedConfigs, currentConfig]
     );
@@ -136,11 +146,7 @@ export const useConfigStorage = () => {
                 setCurrentConfig(config);
                 setActiveConfigName(name);
                 persistCurrent(config);
-                try {
-                    localStorage.setItem(STORAGE_KEY_ACTIVE, name);
-                } catch {
-                    // localStorage full or unavailable
-                }
+                safeSetItem(STORAGE_KEY_ACTIVE, name);
             }
         },
         [savedConfigs, persistCurrent]
@@ -153,12 +159,8 @@ export const useConfigStorage = () => {
             setSavedConfigs(rest);
             const clearActive = activeConfigName === name;
             if (clearActive) setActiveConfigName(null);
-            try {
-                localStorage.setItem(STORAGE_KEY_SAVED, JSON.stringify(rest));
-                if (clearActive) localStorage.removeItem(STORAGE_KEY_ACTIVE);
-            } catch {
-                // localStorage full or unavailable
-            }
+            safeSetItem(STORAGE_KEY_SAVED, JSON.stringify(rest));
+            if (clearActive) safeRemoveItem(STORAGE_KEY_ACTIVE);
         },
         [savedConfigs, activeConfigName]
     );
