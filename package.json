@@ -23,17 +23,13 @@
     ]
   },
   "dependencies": {
-    "@chakra-ui/react": "^2.10.7",
-    "@emotion/react": "^11.13.3",
-    "@emotion/styled": "^11.13.0",
     "@fontsource/rubik": "^5.2.6",
-    "@sentry/browser": "^8.30.0",
+    "@sentry/browser": "^10.32.1",
     "@sentry/nextjs": "^9.17.0",
-    "@sentry/types": "^8.30.0",
+    "@sentry/types": "^10.32.1",
     "@typescript-eslint/eslint-plugin": "^8.6.0",
     "@typescript-eslint/parser": "^8.6.0",
     "framer-motion": "^11.5.4",
-    "install": "^0.13.0",
     "next": "15.4.10",
     "prettier": "^3.3.3",
     "react": "^18",
@@ -42,16 +38,20 @@
     "uuid": "^10.0.0"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.18",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "@types/uuid": "^10.0.0",
+    "autoprefixer": "^10.4.23",
     "eslint": "^8.41.0",
     "eslint-config-next": "14.2.11",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.2.1",
     "husky": "^8.0.0",
     "lint-staged": "^15.2.10",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.18",
     "typescript": "^5"
   }
 }
