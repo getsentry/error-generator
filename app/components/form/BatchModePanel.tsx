@@ -1,7 +1,7 @@
 'use client';
 
-import { motion } from 'framer-motion';
-import { fadeInUp } from '@/app/styles/animations';
+import { motion, AnimatePresence } from 'framer-motion';
+import { fadeInUp, slideInRight, slideInRightItem } from '@/app/styles/animations';
 import { BatchMode } from '@/app/hooks/useBatchMode';
 
 interface BatchModePanelProps {
@@ -12,8 +12,8 @@ export const BatchModePanel = ({ batch }: BatchModePanelProps) => {
     const progress = batch.totalRepeats > 0 ? (batch.currentRepeat / batch.totalRepeats) * 100 : 0;
 
     return (
-        <motion.div variants={fadeInUp} className="border-2 border-hero-violet p-3">
-            <div className="flex items-center justify-between">
+        <motion.div variants={fadeInUp} className="border-3 border-hero-violet p-3">
+            <div className="flex items-center justify-between min-h-[2.25rem]">
                 <div className="flex items-center gap-2">
                     <button
                         onClick={() => batch.setEnabled(!batch.enabled)}
@@ -24,31 +24,45 @@ export const BatchModePanel = ({ batch }: BatchModePanelProps) => {
                     </button>
                     <span className="label-brutal !mb-0">Batch Mode</span>
                 </div>
-                {batch.enabled && (
-                    <div className="flex gap-3">
-                        <div className="flex items-center gap-2">
-                            <span className="text-sm text-brutal-white/70">Every</span>
-                            <input
-                                type="number"
-                                min={1}
-                                value={batch.frequency}
-                                onChange={(e) => batch.setFrequency(e.target.value)}
-                                className="input-brutal w-16 px-2 py-1 text-sm text-center"
-                            />
-                            <span className="text-sm text-brutal-white/70">s</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <span className="text-sm text-brutal-white/70">x</span>
-                            <input
-                                type="number"
-                                min={1}
-                                value={batch.repeatCount}
-                                onChange={(e) => batch.setRepeatCount(e.target.value)}
-                                className="input-brutal w-16 px-2 py-1 text-sm text-center"
-                            />
-                        </div>
-                    </div>
-                )}
+                <AnimatePresence mode="wait">
+                    {batch.enabled && (
+                        <motion.div
+                            className="flex gap-3"
+                            variants={slideInRight}
+                            initial="hidden"
+                            animate="visible"
+                            exit="exit"
+                        >
+                            <motion.div
+                                variants={slideInRightItem}
+                                className="flex items-center gap-2"
+                            >
+                                <span className="text-sm text-brutal-white/70">every</span>
+                                <input
+                                    type="number"
+                                    min={1}
+                                    value={batch.frequency}
+                                    onChange={(e) => batch.setFrequency(e.target.value)}
+                                    className="input-brutal w-16 px-2 py-1 text-sm text-center"
+                                />
+                                <span className="text-sm text-brutal-white/70">sec,</span>
+                            </motion.div>
+                            <motion.div
+                                variants={slideInRightItem}
+                                className="flex items-center gap-2"
+                            >
+                                <input
+                                    type="number"
+                                    min={1}
+                                    value={batch.repeatCount}
+                                    onChange={(e) => batch.setRepeatCount(e.target.value)}
+                                    className="input-brutal w-16 px-2 py-1 text-sm text-center"
+                                />
+                                <span className="text-sm text-brutal-white/70">times</span>
+                            </motion.div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
             {batch.isRunning && (
                 <div className="mt-3">

@@ -126,6 +126,21 @@ export const useBatchMode = (
         return !isNaN(frequency) && frequency > 0 && !isNaN(repeats) && repeats > 0;
     };
 
+    const getConfig = () => ({
+        enabled: state.enabled,
+        frequency: state.frequency,
+        repeatCount: state.repeatCount,
+    });
+
+    const loadConfig = (config: { enabled: boolean; frequency: string; repeatCount: string }) => {
+        setState((s) => ({
+            ...s,
+            enabled: config.enabled,
+            frequency: config.frequency,
+            repeatCount: config.repeatCount,
+        }));
+    };
+
     return {
         ...state,
         setEnabled,
@@ -135,5 +150,7 @@ export const useBatchMode = (
         execute,
         stop,
         validate,
+        getConfig,
+        loadConfig,
     };
 };
