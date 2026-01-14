@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { IssueType, PerformanceConfig, DEFAULT_PERFORMANCE_CONFIG } from '@/app/types/issueTypes';
 
 export type Priority = 'HIGH' | 'MEDIUM' | 'LOW';
 
@@ -10,6 +11,7 @@ export interface CustomTag {
 export type ErrorForm = ReturnType<typeof useErrorForm>;
 
 interface FormState {
+    issueType: IssueType;
     dsn: string;
     errorCount: string;
     errorsToGenerate: string;
@@ -18,12 +20,14 @@ interface FormState {
     message: string;
     tags: CustomTag[];
     dsnError: string;
+    performance: PerformanceConfig;
 }
 
 export const useErrorForm = (
     showToast: (title: string, desc: string, status: 'success' | 'error' | 'warning') => void
 ) => {
     const [form, setForm] = useState<FormState>({
+        issueType: 'error',
         dsn: '',
         errorCount: '1',
         errorsToGenerate: '1',
@@ -32,6 +36,7 @@ export const useErrorForm = (
         message: '',
         tags: [],
         dsnError: '',
+        performance: { ...DEFAULT_PERFORMANCE_CONFIG },
     });
 
     const [newTagKey, setNewTagKey] = useState('');
@@ -83,18 +88,34 @@ export const useErrorForm = (
     };
 
     const validate = (): boolean => {
-        if (!validateDsn(form.dsn)) return false;
+        if (form.issueType === 'error') {
+            if (!validateDsn(form.dsn)) return false;
 
-        const eventsPerError = parseInt(form.errorCount, 10);
-        const numErrors = form.fingerprintID ? 1 : parseInt(form.errorsToGenerate, 10);
+            const eventsPerError = parseInt(form.errorCount, 10);
+            const numErrors = form.fingerprintID ? 1 : parseInt(form.errorsToGenerate, 10);
 
-        if (isNaN(eventsPerError) || eventsPerError <= 0) {
-            showToast('Invalid', 'Enter positive event count', 'error');
-            return false;
-        }
-        if (!form.fingerprintID && (isNaN(numErrors) || numErrors <= 0)) {
-            showToast('Invalid', 'Enter positive error count', 'error');
-            return false;
+            if (isNaN(eventsPerError) || eventsPerError <= 0) {
+                showToast('Invalid', 'Enter positive event count', 'error');
+                return false;
+            }
+            if (!form.fingerprintID && (isNaN(numErrors) || numErrors <= 0)) {
+                showToast('Invalid', 'Enter positive error count', 'error');
+                return false;
+            }
+        } else if (form.issueType === 'performance') {
+            if (!validateDsn(form.dsn)) return false;
+
+            const callCount = parseInt(form.performance.callCount, 10);
+            const targetDelay = parseInt(form.performance.targetDelay, 10);
+
+            if (isNaN(callCount) || callCount < 10) {
+                showToast('Invalid', 'API call count must be at least 10', 'error');
+                return false;
+            }
+            if (isNaN(targetDelay) || targetDelay < 0) {
+                showToast('Invalid', 'Target delay must be non-negative', 'error');
+                return false;
+            }
         }
         return true;
     };
@@ -124,7 +145,25 @@ export const useErrorForm = (
         },
     });
 
+    const getPerformancePayload = () => ({
+        callCount: parseInt(form.performance.callCount, 10),
+        targetDelay: parseInt(form.performance.targetDelay, 10),
+        customEndpoint: form.performance.customEndpoint,
+    });
+
+    const getPerformancePreviewPayload = () => ({
+        type: 'N+1 API Calls',
+        transaction: 'N+1 API Calls Test',
+        op: 'ui.action',
+        spans: {
+            count: parseInt(form.performance.callCount, 10) || 15,
+            op: 'http.client',
+            targetDelay: `${form.performance.targetDelay}ms`,
+        },
+    });
+
     const getConfig = () => ({
+        issueType: form.issueType,
         dsn: form.dsn,
         message: form.message,
         priority: form.priority,
@@ -132,9 +171,11 @@ export const useErrorForm = (
         errorCount: form.errorCount,
         errorsToGenerate: form.errorsToGenerate,
         fingerprintID: form.fingerprintID,
+        performance: form.performance,
     });
 
     const loadConfig = (config: {
+        issueType?: IssueType;
         dsn: string;
         message: string;
         priority: Priority;
@@ -142,9 +183,11 @@ export const useErrorForm = (
         errorCount: string;
         errorsToGenerate: string;
         fingerprintID: string;
+        performance?: PerformanceConfig;
     }) => {
         setForm((f) => ({
             ...f,
+            issueType: config.issueType || 'error',
             dsn: config.dsn,
             message: config.message,
             priority: config.priority,
@@ -152,6 +195,7 @@ export const useErrorForm = (
             errorCount: config.errorCount,
             errorsToGenerate: config.errorsToGenerate,
             fingerprintID: config.fingerprintID,
+            performance: config.performance || { ...DEFAULT_PERFORMANCE_CONFIG },
             dsnError: '',
         }));
     };
@@ -169,6 +213,8 @@ export const useErrorForm = (
         validate,
         getPayload,
         getPreviewPayload,
+        getPerformancePayload,
+        getPerformancePreviewPayload,
         getConfig,
         loadConfig,
     };

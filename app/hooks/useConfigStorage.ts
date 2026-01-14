@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { IssueType, PerformanceConfig, DEFAULT_PERFORMANCE_CONFIG } from '@/app/types/issueTypes';
 
 export interface ConfigData {
+    issueType: IssueType;
     dsn: string;
     message: string;
     priority: 'HIGH' | 'MEDIUM' | 'LOW';
@@ -13,6 +15,7 @@ export interface ConfigData {
         frequency: string;
         repeatCount: string;
     };
+    performance: PerformanceConfig;
 }
 
 interface SavedConfigs {
@@ -48,6 +51,7 @@ const safeRemoveItem = (key: string): void => {
 };
 
 const defaultConfig: ConfigData = {
+    issueType: 'error',
     dsn: '',
     message: '',
     priority: 'HIGH',
@@ -60,12 +64,13 @@ const defaultConfig: ConfigData = {
         frequency: '30',
         repeatCount: '5',
     },
+    performance: { ...DEFAULT_PERFORMANCE_CONFIG },
 };
 
 const isValidConfig = (data: unknown): data is ConfigData => {
     if (!data || typeof data !== 'object') return false;
     const d = data as Record<string, unknown>;
-    return (
+    const baseValid =
         typeof d.dsn === 'string' &&
         typeof d.message === 'string' &&
         ['HIGH', 'MEDIUM', 'LOW'].includes(d.priority as string) &&
@@ -74,9 +79,28 @@ const isValidConfig = (data: unknown): data is ConfigData => {
         typeof d.errorsToGenerate === 'string' &&
         typeof d.fingerprintID === 'string' &&
         d.batch !== null &&
-        typeof d.batch === 'object'
-    );
+        typeof d.batch === 'object';
+
+    if (!baseValid) return false;
+
+    // issueType and performance are optional for backwards compatibility
+    if (
+        d.issueType !== undefined &&
+        !['error', 'performance', 'user_feedback', 'dead_click'].includes(d.issueType as string)
+    ) {
+        return false;
+    }
+
+    return true;
 };
+
+// Migrate old configs that don't have new fields
+const migrateConfig = (config: Partial<ConfigData>): ConfigData => ({
+    ...defaultConfig,
+    ...config,
+    issueType: config.issueType || 'error',
+    performance: config.performance || { ...DEFAULT_PERFORMANCE_CONFIG },
+});
 
 export const useConfigStorage = () => {
     const [mounted, setMounted] = useState(false);
@@ -91,7 +115,7 @@ export const useConfigStorage = () => {
         if (storedCurrent) {
             try {
                 const parsed = JSON.parse(storedCurrent);
-                if (isValidConfig(parsed)) setCurrentConfig(parsed);
+                if (isValidConfig(parsed)) setCurrentConfig(migrateConfig(parsed));
             } catch {
                 // Invalid JSON
             }
@@ -100,7 +124,15 @@ export const useConfigStorage = () => {
         if (storedSaved) {
             try {
                 const parsed = JSON.parse(storedSaved);
-                if (parsed && typeof parsed === 'object') setSavedConfigs(parsed);
+                if (parsed && typeof parsed === 'object') {
+                    const migratedConfigs: SavedConfigs = {};
+                    for (const [name, config] of Object.entries(parsed)) {
+                        if (isValidConfig(config)) {
+                            migratedConfigs[name] = migrateConfig(config as ConfigData);
+                        }
+                    }
+                    setSavedConfigs(migratedConfigs);
+                }
             } catch {
                 // Invalid JSON
             }
@@ -143,9 +175,10 @@ export const useConfigStorage = () => {
         (name: string) => {
             const config = savedConfigs[name];
             if (config) {
-                setCurrentConfig(config);
+                const migrated = migrateConfig(config);
+                setCurrentConfig(migrated);
                 setActiveConfigName(name);
-                persistCurrent(config);
+                persistCurrent(migrated);
                 safeSetItem(STORAGE_KEY_ACTIVE, name);
             }
         },
