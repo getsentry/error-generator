@@ -49,14 +49,17 @@ export async function POST(request: NextRequest) {
         let publicKey: string;
         let host: string;
         let projectId: string;
+        // Preserved from the DSN so local/self-hosted Sentry over plain HTTP works.
+        let protocol: string;
 
         try {
-            // Expected format: https://{public_key}@{host}/{project_id}
+            // Expected format: {http|https}://{public_key}@{host}/{project_id}
             const dsnParts = dsn.split('@');
             if (dsnParts.length !== 2) {
                 return NextResponse.json({ error: 'Invalid DSN format' }, { status: 400 });
             }
 
+            protocol = dsnParts[0].split('://')[0];
             publicKey = dsnParts[0].split('://')[1];
             const hostProject = dsnParts[1].split('/');
             if (hostProject.length < 2) {
@@ -118,7 +121,7 @@ export async function POST(request: NextRequest) {
                 };
 
                 try {
-                    const sentryStoreUrl = `https://${host}/api/${projectId}/store/`;
+                    const sentryStoreUrl = `${protocol}://${host}/api/${projectId}/store/`;
                     const headers = {
                         'Content-Type': 'application/json',
                         'X-Sentry-Auth': `Sentry sentry_version=7, sentry_client=edge-function/1.0, sentry_key=${publicKey}`,
