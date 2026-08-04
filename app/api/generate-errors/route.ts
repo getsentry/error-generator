@@ -60,6 +60,12 @@ export async function POST(request: NextRequest) {
             }
 
             protocol = dsnParts[0].split('://')[0];
+            // The host is caller-supplied, so pin the scheme to the two Sentry speaks.
+            // Without this, any string before '://' would reach fetch().
+            if (protocol !== 'http' && protocol !== 'https') {
+                return NextResponse.json({ error: 'Invalid DSN format' }, { status: 400 });
+            }
+
             publicKey = dsnParts[0].split('://')[1];
             const hostProject = dsnParts[1].split('/');
             if (hostProject.length < 2) {
@@ -136,12 +142,9 @@ export async function POST(request: NextRequest) {
                     if (response.ok) {
                         results.push({ event_id: eventId, status: 'sent' });
                     } else {
-                        const responseText = await response.text();
-                        results.push({
-                            event_id: eventId,
-                            status: 'failed',
-                            response: responseText,
-                        });
+                        // Don't echo the upstream body: the caller controls the host,
+                        // so reflecting it would leak internal responses.
+                        results.push({ event_id: eventId, status: 'failed' });
                     }
                 } catch (e) {
                     if (e instanceof Error) {
