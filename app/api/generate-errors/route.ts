@@ -49,11 +49,20 @@ export async function POST(request: NextRequest) {
         let publicKey: string;
         let host: string;
         let projectId: string;
+        // Preserved from the DSN so local/self-hosted Sentry over plain HTTP works.
+        let protocol: string;
 
         try {
-            // Expected format: https://{public_key}@{host}/{project_id}
+            // Expected format: {http|https}://{public_key}@{host}/{project_id}
             const dsnParts = dsn.split('@');
             if (dsnParts.length !== 2) {
+                return NextResponse.json({ error: 'Invalid DSN format' }, { status: 400 });
+            }
+
+            protocol = dsnParts[0].split('://')[0];
+            // The host is caller-supplied, so pin the scheme to the two Sentry speaks.
+            // Without this, any string before '://' would reach fetch().
+            if (protocol !== 'http' && protocol !== 'https') {
                 return NextResponse.json({ error: 'Invalid DSN format' }, { status: 400 });
             }
 
@@ -118,7 +127,7 @@ export async function POST(request: NextRequest) {
                 };
 
                 try {
-                    const sentryStoreUrl = `https://${host}/api/${projectId}/store/`;
+                    const sentryStoreUrl = `${protocol}://${host}/api/${projectId}/store/`;
                     const headers = {
                         'Content-Type': 'application/json',
                         'X-Sentry-Auth': `Sentry sentry_version=7, sentry_client=edge-function/1.0, sentry_key=${publicKey}`,
@@ -133,12 +142,9 @@ export async function POST(request: NextRequest) {
                     if (response.ok) {
                         results.push({ event_id: eventId, status: 'sent' });
                     } else {
-                        const responseText = await response.text();
-                        results.push({
-                            event_id: eventId,
-                            status: 'failed',
-                            response: responseText,
-                        });
+                        // Don't echo the upstream body: the caller controls the host,
+                        // so reflecting it would leak internal responses.
+                        results.push({ event_id: eventId, status: 'failed' });
                     }
                 } catch (e) {
                     if (e instanceof Error) {

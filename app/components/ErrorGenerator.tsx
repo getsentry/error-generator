@@ -182,6 +182,8 @@ const ErrorGenerator = () => {
         const transactionId = crypto.randomUUID().replace(/-/g, '').slice(0, 16);
 
         const dsnParts = form.dsn.split('@');
+        // Keep the DSN's scheme so local/self-hosted Sentry over plain HTTP works.
+        const protocol = dsnParts[0].split('://')[0];
         const publicKey = dsnParts[0].split('://')[1];
         const hostProject = dsnParts[1].split('/');
         const host = hostProject[0];
@@ -237,7 +239,7 @@ const ErrorGenerator = () => {
         const itemHeader = JSON.stringify({ type: 'transaction' });
         const envelope = `${envelopeHeader}\n${itemHeader}\n${JSON.stringify(transaction)}`;
 
-        const response = await fetch(`https://${host}/api/${projectId}/envelope/`, {
+        const response = await fetch(`${protocol}://${host}/api/${projectId}/envelope/`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-sentry-envelope',
