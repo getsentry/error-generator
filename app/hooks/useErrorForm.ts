@@ -51,8 +51,10 @@ export const useErrorForm = (
             setForm((f) => ({ ...f, dsnError: 'DSN is required' }));
             return false;
         }
+        // Allows http:// and an explicit :port so local/self-hosted Sentry DSNs
+        // (e.g. http://key@dev.getsentry.net:8000/1) validate too.
         const dsnRegex =
-            /^https:\/\/[a-zA-Z0-9]+@([a-zA-Z0-9-]+\.)*[a-zA-Z0-9-]+\.[a-zA-Z0-9-]+\/[0-9]+$/;
+            /^https?:\/\/[a-zA-Z0-9]+@([a-zA-Z0-9-]+\.)*[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*(:[0-9]+)?\/[0-9]+$/;
         if (!dsnRegex.test(value)) {
             setForm((f) => ({ ...f, dsnError: 'Invalid DSN format' }));
             return false;
