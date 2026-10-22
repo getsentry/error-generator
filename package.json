@@ -28,7 +28,7 @@
   "dependencies": {
     "@fontsource/rubik": "^5.2.6",
     "@sentry/browser": "^10.32.1",
-    "@sentry/nextjs": "^9.17.0",
+    "@sentry/nextjs": "^9.47.2",
     "@sentry/types": "^10.32.1",
     "@typescript-eslint/eslint-plugin": "^8.6.0",
     "@typescript-eslint/parser": "^8.6.0",
@@ -46,14 +46,14 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "@types/uuid": "^10.0.0",
-    "autoprefixer": "^10.4.23",
+    "autoprefixer": "^10.6.1",
     "eslint": "^8.41.0",
     "eslint-config-next": "15.5.28",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.2.1",
     "husky": "^8.0.0",
     "lint-staged": "^15.2.10",
-    "postcss": "^8.5.6",
+    "postcss": "^8.5.31",
     "tailwindcss": "^4.1.18",
     "typescript": "^5"
   }
